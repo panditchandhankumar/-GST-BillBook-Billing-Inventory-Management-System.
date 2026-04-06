@@ -29,7 +29,7 @@ const Parties = () => {
   const [parties, setParties] = useState<Party[]>(sampleParties);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newParty, setNewParty] = useState({ name: "", phone: "", address: "", gstin: "", type: "customer" as const });
+  const [newParty, setNewParty] = useState<{ name: string; phone: string; address: string; gstin: string; type: "customer" | "supplier" }>({ name: "", phone: "", address: "", gstin: "", type: "customer" });
 
   const filtered = parties.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
