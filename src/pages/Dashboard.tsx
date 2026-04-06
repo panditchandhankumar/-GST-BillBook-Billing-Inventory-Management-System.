@@ -1,128 +1,133 @@
 import { motion } from "framer-motion";
 import {
-  Wallet,
-  Landmark,
   ArrowDownCircle,
   ArrowUpCircle,
-  TrendingUp,
-  FileText,
-  Users,
-  Package,
+  Landmark,
+  RefreshCw,
 } from "lucide-react";
-import { StatCard } from "@/components/StatCard";
-import { SalesChart } from "@/components/SalesChart";
-import { RecentTransactions } from "@/components/RecentTransactions";
+import { LatestTransactions } from "@/components/LatestTransactions";
+import { SalesReportChart } from "@/components/SalesReportChart";
+import { TodaysChecklist } from "@/components/TodaysChecklist";
 
 const Dashboard = () => {
+  const now = new Date();
+  const lastUpdate = now.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }) + " | " + now.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <motion.div
+    <div className="space-y-5">
+      {/* Page Title */}
+      <motion.h1
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="text-xl font-bold text-foreground"
       >
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome back! Here's your business overview.</p>
+        Dashboard
+      </motion.h1>
+
+      {/* Business Overview */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Business Overview</h2>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Last Update: {lastUpdate}</span>
+            <button className="p-1 rounded-full hover:bg-muted transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* To Collect */}
+          <div className="rounded-xl border border-border bg-card p-4 relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <ArrowDownCircle className="w-4 h-4 text-success" />
+              <span className="text-sm font-medium text-success">To Collect</span>
+            </div>
+            <p className="text-2xl font-bold text-card-foreground">₹ 0</p>
+            <button className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors">
+              <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
+
+          {/* To Pay */}
+          <div className="rounded-xl border border-border bg-card p-4 relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <ArrowUpCircle className="w-4 h-4 text-destructive" />
+              <span className="text-sm font-medium text-destructive">To Pay</span>
+            </div>
+            <p className="text-2xl font-bold text-card-foreground">₹ 0</p>
+            <button className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors">
+              <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
+
+          {/* Total Cash + Bank Balance */}
+          <div className="rounded-xl border border-border bg-card p-4 relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <Landmark className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">Total Cash + Bank Balance</span>
+            </div>
+            <p className="text-2xl font-bold text-card-foreground">₹ 220</p>
+            <button className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors">
+              <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Cash Balance"
-          value="₹2,45,680"
-          change="+12.5% from last month"
-          changeType="positive"
-          icon={Wallet}
-          gradient="gradient-primary"
-          delay={0}
-        />
-        <StatCard
-          title="Bank Balance"
-          value="₹8,72,340"
-          change="+8.2% from last month"
-          changeType="positive"
-          icon={Landmark}
-          gradient="gradient-success"
-          delay={0.1}
-        />
-        <StatCard
-          title="To Collect"
-          value="₹1,34,500"
-          change="5 pending invoices"
-          changeType="neutral"
-          icon={ArrowDownCircle}
-          gradient="gradient-warning"
-          delay={0.2}
-        />
-        <StatCard
-          title="To Pay"
-          value="₹67,890"
-          change="3 due payments"
-          changeType="negative"
-          icon={ArrowUpCircle}
-          gradient="gradient-danger"
-          delay={0.3}
-        />
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Total Sales", value: "₹12,45,000", icon: TrendingUp, color: "text-primary" },
-          { label: "Invoices", value: "156", icon: FileText, color: "text-accent" },
-          { label: "Parties", value: "84", icon: Users, color: "text-success" },
-          { label: "Items", value: "230", icon: Package, color: "text-warning" },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 + i * 0.05 }}
-            className="glass-card p-4 flex items-center gap-3"
-          >
-            <stat.icon className={`w-5 h-5 ${stat.color}`} />
-            <div>
-              <p className="text-lg font-semibold text-card-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Chart + Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Latest Transactions + Today's Checklist */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="lg:col-span-2 glass-card p-6"
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-2 rounded-xl border border-border bg-card"
         >
-          <h2 className="text-lg font-semibold text-card-foreground mb-4">Sales Overview</h2>
-          <SalesChart />
+          <div className="p-4 border-b border-border">
+            <h2 className="text-base font-semibold text-card-foreground">Latest Transactions</h2>
+          </div>
+          <LatestTransactions />
+          <div className="p-3 text-center border-t border-border">
+            <button className="text-sm text-primary font-medium hover:underline">
+              See All Transactions
+            </button>
+          </div>
         </motion.div>
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-card p-6"
+          transition={{ delay: 0.25 }}
+          className="rounded-xl border border-border bg-card"
         >
-          <h2 className="text-lg font-semibold text-card-foreground mb-4">Recent Transactions</h2>
-          <RecentTransactions />
+          <div className="p-4 border-b border-border">
+            <h2 className="text-base font-semibold text-card-foreground">Today's Checklist</h2>
+          </div>
+          <TodaysChecklist />
         </motion.div>
       </div>
+
+      {/* Sales Report */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="rounded-xl border border-border bg-card"
+      >
+        <SalesReportChart />
+      </motion.div>
     </div>
   );
 };
