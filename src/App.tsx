@@ -30,23 +30,30 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/parties" element={<Parties />} />
             <Route path="/items" element={<Items />} />
+            <Route path="/items/godown" element={<GenericPage />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/sales/create" element={<CreateSalesInvoice />} />
+            <Route path="/sales/quotation" element={<GenericPage />} />
+            <Route path="/sales/payment-in" element={<GenericPage />} />
+            <Route path="/sales/return" element={<GenericPage />} />
+            <Route path="/sales/credit-note" element={<GenericPage />} />
+            <Route path="/sales/delivery-challan" element={<GenericPage />} />
+            <Route path="/sales/proforma" element={<GenericPage />} />
             <Route path="/purchases" element={<Purchases />} />
+            <Route path="/purchases/payment-out" element={<GenericPage />} />
+            <Route path="/purchases/return" element={<GenericPage />} />
+            <Route path="/purchases/debit-note" element={<GenericPage />} />
+            <Route path="/purchases/orders" element={<GenericPage />} />
             <Route path="/cash-bank" element={<CashBank />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/e-invoicing" element={<GenericPage />} />
+            <Route path="/automated-bills" element={<GenericPage />} />
+            <Route path="/pos-billing" element={<GenericPage />} />
+            <Route path="/staff-payroll" element={<GenericPage />} />
+            <Route path="/manage-users" element={<GenericPage />} />
+            <Route path="/online-orders" element={<GenericPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/quotation" element={<GenericPage />} />
-            <Route path="/payment-in" element={<GenericPage />} />
-            <Route path="/sales-return" element={<GenericPage />} />
-            <Route path="/credit-note" element={<GenericPage />} />
-            <Route path="/delivery-challan" element={<GenericPage />} />
-            <Route path="/proforma" element={<GenericPage />} />
-            <Route path="/payment-out" element={<GenericPage />} />
-            <Route path="/purchase-return" element={<GenericPage />} />
-            <Route path="/debit-note" element={<GenericPage />} />
-            <Route path="/purchase-orders" element={<GenericPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
