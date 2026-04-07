@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Eye, Download, Share2, FileText } from "lucide-react";
+import { Search, Eye, Download, Share2, FileText } from "lucide-react";
+import { SplitCreateButton } from "@/components/SplitCreateButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,7 @@ const Sales = () => {
           <h1 className="text-2xl font-bold text-foreground">Sales & Invoices</h1>
           <p className="text-sm text-muted-foreground">Create and manage GST invoices</p>
         </div>
-        <Button className="gradient-primary text-primary-foreground border-0">
-          <Plus className="w-4 h-4 mr-2" />Create Invoice
-        </Button>
+        <SplitCreateButton />
       </div>
 
       {/* Summary */}

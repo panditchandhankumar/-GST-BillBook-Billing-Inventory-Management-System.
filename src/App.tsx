@@ -14,6 +14,8 @@ import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import CreateSalesInvoice from "./pages/CreateSalesInvoice";
+import GenericPage from "./pages/GenericPage";
 
 const queryClient = new QueryClient();
 
@@ -29,11 +31,22 @@ const App = () => (
             <Route path="/parties" element={<Parties />} />
             <Route path="/items" element={<Items />} />
             <Route path="/sales" element={<Sales />} />
+            <Route path="/sales/create" element={<CreateSalesInvoice />} />
             <Route path="/purchases" element={<Purchases />} />
             <Route path="/cash-bank" element={<CashBank />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/quotation" element={<GenericPage />} />
+            <Route path="/payment-in" element={<GenericPage />} />
+            <Route path="/sales-return" element={<GenericPage />} />
+            <Route path="/credit-note" element={<GenericPage />} />
+            <Route path="/delivery-challan" element={<GenericPage />} />
+            <Route path="/proforma" element={<GenericPage />} />
+            <Route path="/payment-out" element={<GenericPage />} />
+            <Route path="/purchase-return" element={<GenericPage />} />
+            <Route path="/debit-note" element={<GenericPage />} />
+            <Route path="/purchase-orders" element={<GenericPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
