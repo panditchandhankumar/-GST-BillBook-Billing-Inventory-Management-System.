@@ -1,115 +1,163 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Eye, Download, Share2, FileText } from "lucide-react";
-import { SplitCreateButton } from "@/components/SplitCreateButton";
+import { Search, FileText, MoreVertical, ArrowDownCircle, ArrowUpCircle, XCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 interface Invoice {
   id: number;
+  date: string;
   invoiceNo: string;
   party: string;
-  date: string;
+  dueIn: string;
   amount: number;
-  gst: number;
-  total: number;
-  status: "paid" | "pending" | "overdue";
+  status: "Paid" | "Unpaid" | "Cancelled";
 }
 
 const sampleInvoices: Invoice[] = [
-  { id: 1, invoiceNo: "INV-001", party: "Sharma Electronics", date: "2025-04-05", amount: 10593, gst: 1907, total: 12500, status: "paid" },
-  { id: 2, invoiceNo: "INV-002", party: "Patel & Sons", date: "2025-04-04", amount: 21017, gst: 3783, total: 24800, status: "paid" },
-  { id: 3, invoiceNo: "INV-003", party: "Singh Enterprises", date: "2025-04-03", amount: 16017, gst: 2883, total: 18900, status: "pending" },
-  { id: 4, invoiceNo: "INV-004", party: "Mehta Associates", date: "2025-04-02", amount: 30508, gst: 5492, total: 36000, status: "overdue" },
-  { id: 5, invoiceNo: "INV-005", party: "Reddy Corp", date: "2025-04-01", amount: 7627, gst: 1373, total: 9000, status: "paid" },
+  { id: 1, date: "02 Apr 2026", invoiceNo: "1", party: "Cash Sale", dueIn: "-", amount: 220, status: "Paid" },
 ];
 
 const Sales = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("Last 365 Days");
+
   const filtered = sampleInvoices.filter((inv) =>
-    inv.party.toLowerCase().includes(search.toLowerCase()) || inv.invoiceNo.toLowerCase().includes(search.toLowerCase())
+    inv.party.toLowerCase().includes(search.toLowerCase()) || inv.invoiceNo.includes(search)
   );
 
+  const totalSales = sampleInvoices.reduce((s, i) => s + i.amount, 0);
+  const paidAmount = sampleInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + i.amount, 0);
+  const unpaidAmount = sampleInvoices.filter(i => i.status === "Unpaid").reduce((s, i) => s + i.amount, 0);
+
   const statusColor = (s: string) => {
-    if (s === "paid") return "bg-success/10 text-success";
-    if (s === "pending") return "bg-warning/10 text-warning";
-    return "bg-destructive/10 text-destructive";
+    if (s === "Paid") return "text-success";
+    if (s === "Unpaid") return "text-destructive";
+    return "text-muted-foreground";
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Sales & Invoices</h1>
-          <p className="text-sm text-muted-foreground">Create and manage GST invoices</p>
+        <h1 className="text-xl font-bold text-foreground">Sales Invoices</h1>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="text-primary border-primary">Reports ▾</Button>
+          <Button variant="ghost" size="icon"><svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></Button>
         </div>
-        <SplitCreateButton />
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: "Total Sales", value: "₹1,01,200", gradient: "gradient-primary" },
-          { label: "Paid", value: "₹46,300", gradient: "gradient-success" },
-          { label: "Pending", value: "₹54,900", gradient: "gradient-warning" },
-        ].map((s, i) => (
-          <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">{s.label}</p>
-            <p className="text-xl font-bold text-card-foreground mt-1">{s.value}</p>
-          </motion.div>
-        ))}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <FileText className="w-4 h-4 text-primary" />
+            <span className="text-sm text-primary font-medium">Total Sales</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">₹ {totalSales.toLocaleString("en-IN")}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <ArrowDownCircle className="w-4 h-4 text-success" />
+            <span className="text-sm text-success font-medium">Paid</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">₹ {paidAmount.toLocaleString("en-IN")}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <ArrowUpCircle className="w-4 h-4 text-destructive" />
+            <span className="text-sm text-destructive font-medium">Unpaid</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">₹ {unpaidAmount.toLocaleString("en-IN")}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <XCircle className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground font-medium">Cancelled</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">₹ –</p>
+        </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Search & Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9 w-48" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2 border border-input rounded-md px-3 h-10 bg-background text-sm">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <select className="bg-transparent border-0 text-sm outline-none" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+              <option>Last 30 Days</option>
+              <option>This Quarter</option>
+              <option>Previous Quarter</option>
+              <option>Current Fiscal Year</option>
+              <option>Previous Fiscal Year</option>
+              <option>Last 365 Days</option>
+              <option>Custom</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm">Bulk Actions ▾</Button>
+          <Button className="bg-primary text-primary-foreground" onClick={() => navigate("/sales/create")}>
+            Create Sales Invoice
+          </Button>
+        </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Invoice</th>
-                <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Party</th>
-                <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
-                <th className="text-right p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
-                <th className="text-right p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">GST</th>
-                <th className="text-right p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total</th>
-                <th className="text-center p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+      {/* Table */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/50">
+              <th className="w-10 px-4 py-3"><input type="checkbox" className="rounded" /></th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Date ⇅</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Invoice Number</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Party Name</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Due In</th>
+              <th className="text-right font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Amount ⇅</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Status</th>
+              <th className="px-4 py-3 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-10 h-10 text-muted-foreground/30" />
+                    <p>No Transactions Matching the current filter</p>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((inv, i) => (
-                <motion.tr key={inv.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-card-foreground">{inv.invoiceNo}</span>
-                    </div>
+            ) : (
+              filtered.map((inv, i) => (
+                <motion.tr
+                  key={inv.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="border-t border-border/50 hover:bg-muted/20 transition-colors"
+                >
+                  <td className="px-4 py-3"><input type="checkbox" className="rounded" /></td>
+                  <td className="px-4 py-3 text-foreground">{inv.date}</td>
+                  <td className="px-4 py-3 text-foreground">{inv.invoiceNo}</td>
+                  <td className="px-4 py-3 text-foreground">{inv.party}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{inv.dueIn}</td>
+                  <td className="px-4 py-3 text-right font-medium text-foreground">₹ {inv.amount.toLocaleString("en-IN")}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-sm font-medium ${statusColor(inv.status)}`}>{inv.status}</span>
                   </td>
-                  <td className="p-4 text-sm text-card-foreground">{inv.party}</td>
-                  <td className="p-4 text-sm text-muted-foreground">{new Date(inv.date).toLocaleDateString("en-IN")}</td>
-                  <td className="p-4 text-right text-sm text-card-foreground">₹{inv.amount.toLocaleString("en-IN")}</td>
-                  <td className="p-4 text-right text-sm text-muted-foreground">₹{inv.gst.toLocaleString("en-IN")}</td>
-                  <td className="p-4 text-right text-sm font-semibold text-card-foreground">₹{inv.total.toLocaleString("en-IN")}</td>
-                  <td className="p-4 text-center">
-                    <Badge className={`${statusColor(inv.status)} border-0 capitalize text-xs`}>{inv.status}</Badge>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Share2 className="w-3.5 h-3.5" /></Button>
-                    </div>
-                  </td>
+                  <td className="px-4 py-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></td>
                 </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
