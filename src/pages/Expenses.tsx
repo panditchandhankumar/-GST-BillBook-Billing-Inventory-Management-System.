@@ -1,56 +1,76 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Receipt, Tag } from "lucide-react";
+import { Search, FileText, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const expenses = [
-  { id: 1, desc: "Office Rent", category: "Rent", amount: 15000, date: "2025-04-01" },
-  { id: 2, desc: "Electricity Bill", category: "Utilities", amount: 3200, date: "2025-04-03" },
-  { id: 3, desc: "Internet Bill", category: "Utilities", amount: 1200, date: "2025-04-03" },
-  { id: 4, desc: "Staff Salary - Ramesh", category: "Salary", amount: 18000, date: "2025-04-01" },
-  { id: 5, desc: "Stationery", category: "Office", amount: 850, date: "2025-04-04" },
-  { id: 6, desc: "Travel - Client Visit", category: "Travel", amount: 2500, date: "2025-04-05" },
-];
+import { Input } from "@/components/ui/input";
 
 const Expenses = () => {
-  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("Last 365 Days");
+  const [categoryFilter, setCategoryFilter] = useState("All Expenses Categories");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Expenses</h1>
-          <p className="text-sm text-muted-foreground">Track and categorize business expenses</p>
+        <h1 className="text-xl font-bold text-foreground">Expenses</h1>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="text-primary border-primary">Reports ▾</Button>
+          <Button variant="ghost" size="icon"><svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></Button>
         </div>
-        <Button className="gradient-primary text-primary-foreground border-0"><Plus className="w-4 h-4 mr-2" />Add Expense</Button>
       </div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-5 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl gradient-danger flex items-center justify-center"><Receipt className="w-6 h-6 text-primary-foreground" /></div>
-        <div>
-          <p className="text-sm text-muted-foreground">Total Expenses (This Month)</p>
-          <p className="text-2xl font-bold text-card-foreground">₹{total.toLocaleString("en-IN")}</p>
+      {/* Search & Filters */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9 w-48" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2 border border-input rounded-md px-3 h-10 bg-background text-sm">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <select className="bg-transparent border-0 text-sm outline-none" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+              <option>Last 365 Days</option>
+              <option>Last 30 Days</option>
+              <option>This Quarter</option>
+              <option>Custom</option>
+            </select>
+          </div>
+          <select className="h-10 px-3 rounded-md border border-input bg-background text-sm" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <option>All Expenses Categories</option>
+            <option>Rent</option>
+            <option>Utilities</option>
+            <option>Salary</option>
+            <option>Office</option>
+            <option>Travel</option>
+          </select>
         </div>
-      </motion.div>
+        <Button className="bg-primary text-primary-foreground">Create Expense</Button>
+      </div>
 
-      <div className="glass-card divide-y divide-border/50">
-        {expenses.map((ex, i) => (
-          <motion.div key={ex.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }} className="p-4 flex items-center justify-between hover:bg-muted/20 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
-                <Receipt className="w-4 h-4 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-card-foreground">{ex.desc}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <Tag className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{ex.category}</span>
-                  <span className="text-xs text-muted-foreground">· {new Date(ex.date).toLocaleDateString("en-IN")}</span>
+      {/* Table */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/50">
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Date ⇅</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Expense Number</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Party Name</th>
+              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Category</th>
+              <th className="text-right font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Amount ⇅</th>
+              <th className="px-4 py-3 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={6} className="px-4 py-16 text-center text-muted-foreground">
+                <div className="flex flex-col items-center gap-2">
+                  <FileText className="w-10 h-10 text-muted-foreground/30" />
+                  <p>No Transactions Matching the current filter</p>
                 </div>
-              </div>
-            </div>
-            <p className="text-sm font-semibold text-destructive">-₹{ex.amount.toLocaleString("en-IN")}</p>
-          </motion.div>
-        ))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
