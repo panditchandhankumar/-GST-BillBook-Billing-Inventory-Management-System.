@@ -43,9 +43,7 @@ const Sales = () => {
           <h1 className="text-2xl font-bold text-foreground">Sales & Invoices</h1>
           <p className="text-sm text-muted-foreground">Create and manage GST invoices</p>
         </div>
-        <Button className="gradient-primary text-primary-foreground border-0">
-          <Plus className="w-4 h-4 mr-2" />Create Invoice
-        </Button>
+        <SplitCreateButton />
       </div>
 
       {/* Summary */}
