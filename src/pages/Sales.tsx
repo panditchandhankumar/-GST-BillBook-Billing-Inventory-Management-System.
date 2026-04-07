@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Eye, Download, Share2, FileText } from "lucide-react";
+import { Search, Eye, Download, Share2, FileText } from "lucide-react";
+import { SplitCreateButton } from "@/components/SplitCreateButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
