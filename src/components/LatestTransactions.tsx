@@ -1,11 +1,34 @@
-const transactions = [
-  { date: "02 Apr 2026", type: "Sales Invoices", txnNo: "1", party: "Cash Sale", amount: "₹ 220" },
-  { date: "01 Apr 2026", type: "Purchase", txnNo: "2", party: "Gupta Traders", amount: "₹ 8,200" },
-  { date: "31 Mar 2026", type: "Sales Invoices", txnNo: "3", party: "Patel & Sons", amount: "₹ 24,800" },
-  { date: "30 Mar 2026", type: "Payment Out", txnNo: "4", party: "Kumar Supplies", amount: "₹ 5,600" },
-];
+import { useAppData } from "@/contexts/AppDataContext";
 
 export function LatestTransactions() {
+  const { invoices, expenses } = useAppData();
+
+  // Combine invoices and expenses into a single transactions list, sorted by date desc
+  const transactions = [
+    ...invoices.map(inv => ({
+      date: inv.date,
+      type: "Sales Invoice",
+      txnNo: inv.invoiceNo,
+      party: inv.partyName,
+      amount: inv.grandTotal,
+    })),
+    ...expenses.map(exp => ({
+      date: exp.date,
+      type: "Expense",
+      txnNo: "-",
+      party: exp.category,
+      amount: -exp.amount,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+
+  const fmt = (n: number) => {
+    const abs = Math.abs(n);
+    const prefix = n < 0 ? "- ₹" : "₹";
+    return `${prefix} ${abs.toLocaleString("en-IN")}`;
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -19,15 +42,23 @@ export function LatestTransactions() {
           </tr>
         </thead>
         <tbody>
-          {transactions.map((tx, i) => (
-            <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
-              <td className="px-4 py-3 text-card-foreground">{tx.date}</td>
-              <td className="px-4 py-3 text-card-foreground">{tx.type}</td>
-              <td className="px-4 py-3 text-card-foreground">{tx.txnNo}</td>
-              <td className="px-4 py-3 text-card-foreground">{tx.party}</td>
-              <td className="px-4 py-3 text-card-foreground text-right font-medium">{tx.amount}</td>
-            </tr>
-          ))}
+          {transactions.length === 0 ? (
+            <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No transactions yet</td></tr>
+          ) : (
+            transactions.map((tx, i) => (
+              <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-3 text-card-foreground">
+                  {new Date(tx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                </td>
+                <td className="px-4 py-3 text-card-foreground">{tx.type}</td>
+                <td className="px-4 py-3 text-card-foreground">{tx.txnNo}</td>
+                <td className="px-4 py-3 text-card-foreground">{tx.party}</td>
+                <td className={`px-4 py-3 text-right font-medium ${tx.amount < 0 ? "text-destructive" : "text-card-foreground"}`}>
+                  {fmt(tx.amount)}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
