@@ -1,160 +1,132 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, MoreVertical, TrendingUp, AlertTriangle, Package } from "lucide-react";
+import { Search, Plus, Trash2, Edit2, Package, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAppData, Item } from "@/contexts/AppDataContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-
-interface Item {
-  id: number;
-  name: string;
-  code: string;
-  price: number;
-  stock: number;
-  unit: string;
-  purchasePrice: number;
-}
-
-const sampleItems: Item[] = [
-  { id: 1, name: "atta", code: "-", price: 220, stock: 99, unit: "PKT", purchasePrice: 0 },
-  { id: 2, name: "Sample Item", code: "8901262010023", price: 220, stock: 124, unit: "BOX", purchasePrice: 190 },
-];
+import { toast } from "sonner";
 
 const Items = () => {
-  const [items, setItems] = useState<Item[]>(sampleItems);
+  const { items, addItem, updateItem, deleteItem } = useAppData();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newItem, setNewItem] = useState({ name: "", code: "", price: "", stock: "", unit: "PCS", purchasePrice: "" });
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", code: "", hsn: "", price: 0, purchasePrice: 0, stock: 0, unit: "PCS", taxRate: 18 });
 
-  const filtered = items.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase()) || item.code.includes(search)
-  );
+  const filtered = items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.code.toLowerCase().includes(search.toLowerCase()));
+  const stockValue = items.reduce((s, i) => s + i.stock * i.price, 0);
+  const lowStock = items.filter(i => i.stock < 10).length;
 
-  const stockValue = items.reduce((s, i) => s + i.price * i.stock, 0);
-  const lowStock = items.filter((i) => i.stock <= 5).length;
+  const resetForm = () => {
+    setForm({ name: "", code: "", hsn: "", price: 0, purchasePrice: 0, stock: 0, unit: "PCS", taxRate: 18 });
+    setEditId(null);
+  };
 
-  const handleAdd = () => {
-    if (!newItem.name) return;
-    setItems([...items, {
-      id: Date.now(),
-      name: newItem.name,
-      code: newItem.code || "-",
-      price: parseFloat(newItem.price) || 0,
-      stock: parseInt(newItem.stock) || 0,
-      unit: newItem.unit,
-      purchasePrice: parseFloat(newItem.purchasePrice) || 0,
-    }]);
-    setNewItem({ name: "", code: "", price: "", stock: "", unit: "PCS", purchasePrice: "" });
+  const handleSave = () => {
+    if (!form.name.trim()) { toast.error("Item name is required"); return; }
+    if (editId) {
+      updateItem(editId, form);
+      toast.success("Item updated");
+    } else {
+      addItem(form);
+      toast.success("Item added");
+    }
+    resetForm();
     setDialogOpen(false);
+  };
+
+  const handleEdit = (i: Item) => {
+    setForm({ name: i.name, code: i.code, hsn: i.hsn, price: i.price, purchasePrice: i.purchasePrice, stock: i.stock, unit: i.unit, taxRate: i.taxRate });
+    setEditId(i.id);
+    setDialogOpen(true);
   };
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Items</h1>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="text-primary border-primary">Reports ▾</Button>
-          <Button variant="ghost" size="icon"><svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></Button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-4 relative">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Stock Value ⓘ</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">₹ {stockValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4 relative">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-4 h-4 text-destructive" />
-            <span className="text-sm text-destructive font-medium">Low Stock</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{lowStock}</p>
-        </div>
-      </div>
-
-      {/* Search & Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9 w-56" placeholder="Search by Serial No." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <select className="h-10 px-3 rounded-md border border-input bg-background text-sm">
-            <option>Search Categories</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">Bulk Actions ▾</Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground">Create Item</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Create Item</DialogTitle></DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div><Label>Item Name</Label><Input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} placeholder="Item name" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Service Code</Label><Input value={newItem.code} onChange={(e) => setNewItem({ ...newItem, code: e.target.value })} placeholder="Barcode/HSN" /></div>
-                  <div><Label>Selling Price (₹)</Label><Input type="number" value={newItem.price} onChange={(e) => setNewItem({ ...newItem, price: e.target.value })} /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Stock</Label><Input type="number" value={newItem.stock} onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })} /></div>
-                  <div><Label>Unit</Label><Input value={newItem.unit} onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })} /></div>
-                </div>
-                <div><Label>Purchase Price (₹)</Label><Input type="number" value={newItem.purchasePrice} onChange={(e) => setNewItem({ ...newItem, purchasePrice: e.target.value })} /></div>
-                <Button className="w-full" onClick={handleAdd}>Create Item</Button>
+        <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-1" /> Create Item</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{editId ? "Edit" : "Create"} Item</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <Input placeholder="Item Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input placeholder="Item Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+              <Input placeholder="HSN Code" value={form.hsn} onChange={(e) => setForm({ ...form, hsn: e.target.value })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-muted-foreground">Sale Price</label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+                <div><label className="text-xs text-muted-foreground">Purchase Price</label><Input type="number" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: Number(e.target.value) })} /></div>
               </div>
-            </DialogContent>
-          </Dialog>
+              <div className="grid grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">Stock</label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
+                <div><label className="text-xs text-muted-foreground">Unit</label><Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">Tax %</label><Input type="number" value={form.taxRate} onChange={(e) => setForm({ ...form, taxRate: Number(e.target.value) })} /></div>
+              </div>
+              <Button onClick={handleSave} className="w-full bg-primary text-primary-foreground">{editId ? "Update" : "Add"} Item</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+          <Package className="w-8 h-8 text-primary" />
+          <div><p className="text-xs text-muted-foreground">Total Items</p><p className="text-xl font-bold text-foreground">{items.length}</p></div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+          <Package className="w-8 h-8 text-success" />
+          <div><p className="text-xs text-muted-foreground">Stock Value</p><p className="text-xl font-bold text-success">₹ {stockValue.toLocaleString("en-IN")}</p></div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+          <AlertTriangle className="w-8 h-8 text-warning" />
+          <div><p className="text-xs text-muted-foreground">Low Stock</p><p className="text-xl font-bold text-warning">{lowStock}</p></div>
         </div>
       </div>
 
-      {/* Table */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      </div>
+
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/50">
-              <th className="w-10 px-4 py-3"><input type="checkbox" className="rounded" /></th>
-              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Service Name ⇅</th>
-              <th className="text-left font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Service Code</th>
-              <th className="text-right font-semibold text-muted-foreground px-4 py-3 uppercase text-xs">Selling Price</th>
-              <th className="px-4 py-3 w-10"></th>
+            <tr className="bg-muted/50 border-b border-border">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Name</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Code</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">HSN</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Price</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Stock</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Tax %</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((item, i) => (
-              <motion.tr
-                key={item.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.03 }}
-                className="border-t border-border/50 hover:bg-muted/20 transition-colors"
-              >
-                <td className="px-4 py-3"><input type="checkbox" className="rounded" /></td>
-                <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{item.code}</td>
-                <td className="px-4 py-3 text-right font-medium text-foreground">₹ {item.price}</td>
-                <td className="px-4 py-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></td>
-              </motion.tr>
-            ))}
+            {filtered.length === 0 ? (
+              <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">No items found</td></tr>
+            ) : (
+              filtered.map((item) => (
+                <motion.tr key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.code}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.hsn}</td>
+                  <td className="px-4 py-3 text-right font-medium text-foreground">₹ {item.price.toLocaleString("en-IN")}</td>
+                  <td className={`px-4 py-3 text-right font-medium ${item.stock < 10 ? "text-destructive" : "text-foreground"}`}>{item.stock} {item.unit}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">{item.taxRate}%</td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button onClick={() => handleEdit(item)} className="p-1 hover:bg-muted rounded"><Edit2 className="w-4 h-4 text-muted-foreground" /></button>
+                      <button onClick={() => { deleteItem(item.id); toast.success("Item deleted"); }} className="p-1 hover:bg-destructive/10 rounded"><Trash2 className="w-4 h-4 text-destructive" /></button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))
+            )}
           </tbody>
         </table>
-      </div>
-
-      {/* Bulk Upload Banner */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/10 border border-border p-5">
-        <h3 className="font-semibold text-foreground mb-1">Add Multiple Items at once</h3>
-        <p className="text-sm text-muted-foreground mb-3">Bulk Upload Items from Product Library or Other Software like Vyapar, Tally, Marg & Busy</p>
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm">📥 Import Items</Button>
-          <Button variant="outline" size="sm">📦 Product Library</Button>
-          <Button variant="outline" size="sm">📊 Upload Excel</Button>
-        </div>
       </div>
     </div>
   );
