@@ -66,11 +66,72 @@ export interface Expense {
   createdAt: string;
 }
 
+export interface PurchaseOrder {
+  id: string;
+  orderNo: string;
+  date: string;
+  dueDate: string;
+  supplierId: string;
+  supplierName: string;
+  items: InvoiceLineItem[];
+  subtotal: number;
+  totalDiscount: number;
+  totalTax: number;
+  grandTotal: number;
+  status: "Draft" | "Ordered" | "Received";
+  notes: string;
+  createdAt: string;
+}
+
+export interface RecurringBill {
+  id: string;
+  title: string;
+  partyId: string;
+  partyName: string;
+  itemId: string;
+  itemName: string;
+  hsn: string;
+  qty: number;
+  price: number;
+  tax: number;
+  frequency: "Weekly" | "Monthly" | "Quarterly";
+  paymentMode: string;
+  nextRun: string;
+  lastRun: string;
+  status: "Active" | "Paused";
+  createdAt: string;
+}
+
+export interface CashEntry {
+  id: string;
+  date: string;
+  type: "income" | "expense";
+  account: "Cash" | "Bank";
+  description: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface EInvoiceRecord {
+  id: string;
+  invoiceId: string;
+  invoiceNo: string;
+  partyName: string;
+  irn: string;
+  ackNo: string;
+  generatedAt: string;
+  status: "Generated" | "Cancelled";
+}
+
 interface AppData {
   customers: Customer[];
   items: Item[];
   invoices: Invoice[];
   expenses: Expense[];
+  purchaseOrders: PurchaseOrder[];
+  recurringBills: RecurringBill[];
+  cashEntries: CashEntry[];
+  eInvoices: EInvoiceRecord[];
   addCustomer: (c: Omit<Customer, "id" | "createdAt" | "balance">) => Customer;
   updateCustomer: (id: string, c: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
@@ -83,6 +144,17 @@ interface AppData {
   addExpense: (e: Omit<Expense, "id" | "createdAt">) => Expense;
   updateExpense: (id: string, e: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
+  addPurchaseOrder: (po: Omit<PurchaseOrder, "id" | "createdAt">) => PurchaseOrder;
+  updatePurchaseOrder: (id: string, po: Partial<PurchaseOrder>) => void;
+  deletePurchaseOrder: (id: string) => void;
+  getNextPurchaseOrderNo: () => string;
+  addRecurringBill: (bill: Omit<RecurringBill, "id" | "createdAt">) => RecurringBill;
+  updateRecurringBill: (id: string, bill: Partial<RecurringBill>) => void;
+  deleteRecurringBill: (id: string) => void;
+  addCashEntry: (entry: Omit<CashEntry, "id" | "createdAt">) => CashEntry;
+  deleteCashEntry: (id: string) => void;
+  generateEInvoice: (invoiceId: string) => EInvoiceRecord | null;
+  cancelEInvoice: (invoiceId: string) => void;
   getNextInvoiceNo: () => string;
   totalRevenue: number;
   totalExpenses: number;
@@ -141,22 +213,51 @@ const seedExpenses: Expense[] = [
   { id: "e3", date: "2026-03-25", category: "Utilities", description: "Electricity bill", amount: 3200, paymentMode: "UPI", createdAt: "2026-03-25" },
 ];
 
+const seedPurchaseOrders: PurchaseOrder[] = [];
+
+const seedRecurringBills: RecurringBill[] = [];
+
+const seedCashEntries: CashEntry[] = [];
+
+const seedEInvoices: EInvoiceRecord[] = [
+  {
+    id: "ei1",
+    invoiceId: "inv1",
+    invoiceNo: "INV-001",
+    partyName: "Cash Sale",
+    irn: "IRN260402A1",
+    ackNo: "ACK-204511",
+    generatedAt: "2026-04-02",
+    status: "Generated",
+  },
+];
+
+const todayString = () => new Date().toISOString().slice(0, 10);
+
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>(() => loadFromStorage("app_customers", seedCustomers));
   const [items, setItems] = useState<Item[]>(() => loadFromStorage("app_items", seedItems));
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadFromStorage("app_invoices", seedInvoices));
   const [expenses, setExpenses] = useState<Expense[]>(() => loadFromStorage("app_expenses", seedExpenses));
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadFromStorage("app_purchase_orders", seedPurchaseOrders));
+  const [recurringBills, setRecurringBills] = useState<RecurringBill[]>(() => loadFromStorage("app_recurring_bills", seedRecurringBills));
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>(() => loadFromStorage("app_cash_entries", seedCashEntries));
+  const [eInvoices, setEInvoices] = useState<EInvoiceRecord[]>(() => loadFromStorage("app_e_invoices", seedEInvoices));
 
   // Persist
   useEffect(() => { localStorage.setItem("app_customers", JSON.stringify(customers)); }, [customers]);
   useEffect(() => { localStorage.setItem("app_items", JSON.stringify(items)); }, [items]);
   useEffect(() => { localStorage.setItem("app_invoices", JSON.stringify(invoices)); }, [invoices]);
   useEffect(() => { localStorage.setItem("app_expenses", JSON.stringify(expenses)); }, [expenses]);
+  useEffect(() => { localStorage.setItem("app_purchase_orders", JSON.stringify(purchaseOrders)); }, [purchaseOrders]);
+  useEffect(() => { localStorage.setItem("app_recurring_bills", JSON.stringify(recurringBills)); }, [recurringBills]);
+  useEffect(() => { localStorage.setItem("app_cash_entries", JSON.stringify(cashEntries)); }, [cashEntries]);
+  useEffect(() => { localStorage.setItem("app_e_invoices", JSON.stringify(eInvoices)); }, [eInvoices]);
 
   const genId = () => crypto.randomUUID();
 
   const addCustomer = useCallback((c: Omit<Customer, "id" | "createdAt" | "balance">) => {
-    const newC: Customer = { ...c, id: genId(), balance: 0, createdAt: new Date().toISOString().slice(0, 10) };
+    const newC: Customer = { ...c, id: genId(), balance: 0, createdAt: todayString() };
     setCustomers(prev => [...prev, newC]);
     return newC;
   }, []);
@@ -193,7 +294,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, [invoices]);
 
   const addInvoice = useCallback((inv: Omit<Invoice, "id" | "createdAt">) => {
-    const newInv: Invoice = { ...inv, id: genId(), createdAt: new Date().toISOString().slice(0, 10) };
+    const newInv: Invoice = { ...inv, id: genId(), createdAt: todayString() };
     setInvoices(prev => [...prev, newInv]);
     // Update customer balance
     const balanceChange = newInv.grandTotal - newInv.amountPaid;
@@ -212,7 +313,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addExpense = useCallback((e: Omit<Expense, "id" | "createdAt">) => {
-    const newE: Expense = { ...e, id: genId(), createdAt: new Date().toISOString().slice(0, 10) };
+    const newE: Expense = { ...e, id: genId(), createdAt: todayString() };
     setExpenses(prev => [...prev, newE]);
     return newE;
   }, []);
@@ -225,6 +326,82 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setExpenses(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  const getNextPurchaseOrderNo = useCallback(() => {
+    const nums = purchaseOrders.map(order => {
+      const match = order.orderNo.match(/PO-(\d+)/);
+      return match ? parseInt(match[1]) : 0;
+    });
+    const next = Math.max(0, ...nums) + 1;
+    return `PO-${String(next).padStart(3, "0")}`;
+  }, [purchaseOrders]);
+
+  const addPurchaseOrder = useCallback((po: Omit<PurchaseOrder, "id" | "createdAt">) => {
+    const newPo: PurchaseOrder = { ...po, id: genId(), createdAt: todayString() };
+    setPurchaseOrders(prev => [newPo, ...prev]);
+    return newPo;
+  }, []);
+
+  const updatePurchaseOrder = useCallback((id: string, po: Partial<PurchaseOrder>) => {
+    setPurchaseOrders(prev => prev.map(order => order.id === id ? { ...order, ...po } : order));
+  }, []);
+
+  const deletePurchaseOrder = useCallback((id: string) => {
+    setPurchaseOrders(prev => prev.filter(order => order.id !== id));
+  }, []);
+
+  const addRecurringBill = useCallback((bill: Omit<RecurringBill, "id" | "createdAt">) => {
+    const newBill: RecurringBill = { ...bill, id: genId(), createdAt: todayString() };
+    setRecurringBills(prev => [newBill, ...prev]);
+    return newBill;
+  }, []);
+
+  const updateRecurringBill = useCallback((id: string, bill: Partial<RecurringBill>) => {
+    setRecurringBills(prev => prev.map(record => record.id === id ? { ...record, ...bill } : record));
+  }, []);
+
+  const deleteRecurringBill = useCallback((id: string) => {
+    setRecurringBills(prev => prev.filter(record => record.id !== id));
+  }, []);
+
+  const addCashEntry = useCallback((entry: Omit<CashEntry, "id" | "createdAt">) => {
+    const newEntry: CashEntry = { ...entry, id: genId(), createdAt: todayString() };
+    setCashEntries(prev => [newEntry, ...prev]);
+    return newEntry;
+  }, []);
+
+  const deleteCashEntry = useCallback((id: string) => {
+    setCashEntries(prev => prev.filter(entry => entry.id !== id));
+  }, []);
+
+  const generateEInvoice = useCallback((invoiceId: string) => {
+    const invoice = invoices.find(record => record.id === invoiceId);
+    if (!invoice) return null;
+
+    const existing = eInvoices.find(record => record.invoiceId === invoiceId);
+    const nextRecord: EInvoiceRecord = {
+      id: existing?.id ?? genId(),
+      invoiceId,
+      invoiceNo: invoice.invoiceNo,
+      partyName: invoice.partyName,
+      irn: `IRN-${Date.now().toString(36).toUpperCase()}`,
+      ackNo: `ACK-${Math.floor(100000 + Math.random() * 900000)}`,
+      generatedAt: todayString(),
+      status: "Generated",
+    };
+
+    setEInvoices(prev => existing
+      ? prev.map(record => record.invoiceId === invoiceId ? nextRecord : record)
+      : [nextRecord, ...prev]);
+
+    return nextRecord;
+  }, [eInvoices, invoices]);
+
+  const cancelEInvoice = useCallback((invoiceId: string) => {
+    setEInvoices(prev => prev.map(record => record.invoiceId === invoiceId
+      ? { ...record, status: "Cancelled" }
+      : record));
+  }, []);
+
   const totalRevenue = invoices.reduce((s, inv) => s + inv.grandTotal, 0);
   const totalExpensesAmount = expenses.reduce((s, e) => s + e.amount, 0);
   const profit = totalRevenue - totalExpensesAmount;
@@ -233,11 +410,16 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppDataContext.Provider value={{
-      customers, items, invoices, expenses,
+      customers, items, invoices, expenses, purchaseOrders, recurringBills, cashEntries, eInvoices,
       addCustomer, updateCustomer, deleteCustomer,
       addItem, updateItem, deleteItem,
       addInvoice, updateInvoice, deleteInvoice,
       addExpense, updateExpense, deleteExpense,
+      addPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder,
+      getNextPurchaseOrderNo,
+      addRecurringBill, updateRecurringBill, deleteRecurringBill,
+      addCashEntry, deleteCashEntry,
+      generateEInvoice, cancelEInvoice,
       getNextInvoiceNo,
       totalRevenue, totalExpenses: totalExpensesAmount, profit, toCollect, toPay,
     }}>
