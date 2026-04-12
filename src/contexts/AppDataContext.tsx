@@ -320,6 +320,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [recurringBills, setRecurringBills] = useState<RecurringBill[]>(() => loadFromStorage("app_recurring_bills", seedRecurringBills));
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(() => loadFromStorage("app_cash_entries", seedCashEntries));
   const [eInvoices, setEInvoices] = useState<EInvoiceRecord[]>(() => loadFromStorage("app_e_invoices", seedEInvoices));
+  const [documents, setDocuments] = useState<GenericDocument[]>(() => loadFromStorage("app_documents", []));
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => loadFromStorage("app_staff", []));
+  const [appUsers, setAppUsers] = useState<AppUser[]>(() => loadFromStorage("app_users", [
+    { id: "u1", name: "Admin", email: "admin@business.com", role: "Admin", status: "Active", lastLogin: todayString(), createdAt: todayString() },
+  ]));
+  const [onlineOrders, setOnlineOrders] = useState<OnlineOrder[]>(() => loadFromStorage("app_online_orders", []));
+  const [godownItems, setGodownItems] = useState<GodownItem[]>(() => loadFromStorage("app_godown", []));
 
   // Persist
   useEffect(() => { localStorage.setItem("app_customers", JSON.stringify(customers)); }, [customers]);
@@ -330,130 +337,125 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { localStorage.setItem("app_recurring_bills", JSON.stringify(recurringBills)); }, [recurringBills]);
   useEffect(() => { localStorage.setItem("app_cash_entries", JSON.stringify(cashEntries)); }, [cashEntries]);
   useEffect(() => { localStorage.setItem("app_e_invoices", JSON.stringify(eInvoices)); }, [eInvoices]);
+  useEffect(() => { localStorage.setItem("app_documents", JSON.stringify(documents)); }, [documents]);
+  useEffect(() => { localStorage.setItem("app_staff", JSON.stringify(staffMembers)); }, [staffMembers]);
+  useEffect(() => { localStorage.setItem("app_users", JSON.stringify(appUsers)); }, [appUsers]);
+  useEffect(() => { localStorage.setItem("app_online_orders", JSON.stringify(onlineOrders)); }, [onlineOrders]);
+  useEffect(() => { localStorage.setItem("app_godown", JSON.stringify(godownItems)); }, [godownItems]);
 
   const genId = () => crypto.randomUUID();
 
+  // Customer CRUD
   const addCustomer = useCallback((c: Omit<Customer, "id" | "createdAt" | "balance">) => {
     const newC: Customer = { ...c, id: genId(), balance: 0, createdAt: todayString() };
     setCustomers(prev => [...prev, newC]);
     return newC;
   }, []);
-
   const updateCustomer = useCallback((id: string, c: Partial<Customer>) => {
     setCustomers(prev => prev.map(p => p.id === id ? { ...p, ...c } : p));
   }, []);
-
   const deleteCustomer = useCallback((id: string) => {
     setCustomers(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  // Item CRUD
   const addItem = useCallback((i: Omit<Item, "id">) => {
     const newI: Item = { ...i, id: genId() };
     setItems(prev => [...prev, newI]);
     return newI;
   }, []);
-
   const updateItem = useCallback((id: string, i: Partial<Item>) => {
     setItems(prev => prev.map(p => p.id === id ? { ...p, ...i } : p));
   }, []);
-
   const deleteItem = useCallback((id: string) => {
     setItems(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  // Invoice
   const getNextInvoiceNo = useCallback(() => {
     const nums = invoices.map(inv => {
       const match = inv.invoiceNo.match(/INV-(\d+)/);
       return match ? parseInt(match[1]) : 0;
     });
-    const next = Math.max(0, ...nums) + 1;
-    return `INV-${String(next).padStart(3, "0")}`;
+    return `INV-${String(Math.max(0, ...nums) + 1).padStart(3, "0")}`;
   }, [invoices]);
 
   const addInvoice = useCallback((inv: Omit<Invoice, "id" | "createdAt">) => {
     const newInv: Invoice = { ...inv, id: genId(), createdAt: todayString() };
     setInvoices(prev => [...prev, newInv]);
-    // Update customer balance
     const balanceChange = newInv.grandTotal - newInv.amountPaid;
     if (balanceChange > 0 && newInv.partyId) {
       setCustomers(prev => prev.map(c => c.id === newInv.partyId ? { ...c, balance: c.balance + balanceChange } : c));
     }
     return newInv;
   }, []);
-
   const updateInvoice = useCallback((id: string, inv: Partial<Invoice>) => {
     setInvoices(prev => prev.map(p => p.id === id ? { ...p, ...inv } : p));
   }, []);
-
   const deleteInvoice = useCallback((id: string) => {
     setInvoices(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  // Expense CRUD
   const addExpense = useCallback((e: Omit<Expense, "id" | "createdAt">) => {
     const newE: Expense = { ...e, id: genId(), createdAt: todayString() };
     setExpenses(prev => [...prev, newE]);
     return newE;
   }, []);
-
   const updateExpense = useCallback((id: string, e: Partial<Expense>) => {
     setExpenses(prev => prev.map(p => p.id === id ? { ...p, ...e } : p));
   }, []);
-
   const deleteExpense = useCallback((id: string) => {
     setExpenses(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  // Purchase Order
   const getNextPurchaseOrderNo = useCallback(() => {
     const nums = purchaseOrders.map(order => {
       const match = order.orderNo.match(/PO-(\d+)/);
       return match ? parseInt(match[1]) : 0;
     });
-    const next = Math.max(0, ...nums) + 1;
-    return `PO-${String(next).padStart(3, "0")}`;
+    return `PO-${String(Math.max(0, ...nums) + 1).padStart(3, "0")}`;
   }, [purchaseOrders]);
-
   const addPurchaseOrder = useCallback((po: Omit<PurchaseOrder, "id" | "createdAt">) => {
     const newPo: PurchaseOrder = { ...po, id: genId(), createdAt: todayString() };
     setPurchaseOrders(prev => [newPo, ...prev]);
     return newPo;
   }, []);
-
   const updatePurchaseOrder = useCallback((id: string, po: Partial<PurchaseOrder>) => {
     setPurchaseOrders(prev => prev.map(order => order.id === id ? { ...order, ...po } : order));
   }, []);
-
   const deletePurchaseOrder = useCallback((id: string) => {
     setPurchaseOrders(prev => prev.filter(order => order.id !== id));
   }, []);
 
+  // Recurring Bill
   const addRecurringBill = useCallback((bill: Omit<RecurringBill, "id" | "createdAt">) => {
     const newBill: RecurringBill = { ...bill, id: genId(), createdAt: todayString() };
     setRecurringBills(prev => [newBill, ...prev]);
     return newBill;
   }, []);
-
   const updateRecurringBill = useCallback((id: string, bill: Partial<RecurringBill>) => {
     setRecurringBills(prev => prev.map(record => record.id === id ? { ...record, ...bill } : record));
   }, []);
-
   const deleteRecurringBill = useCallback((id: string) => {
     setRecurringBills(prev => prev.filter(record => record.id !== id));
   }, []);
 
+  // Cash Entry
   const addCashEntry = useCallback((entry: Omit<CashEntry, "id" | "createdAt">) => {
     const newEntry: CashEntry = { ...entry, id: genId(), createdAt: todayString() };
     setCashEntries(prev => [newEntry, ...prev]);
     return newEntry;
   }, []);
-
   const deleteCashEntry = useCallback((id: string) => {
     setCashEntries(prev => prev.filter(entry => entry.id !== id));
   }, []);
 
+  // E-Invoice
   const generateEInvoice = useCallback((invoiceId: string) => {
     const invoice = invoices.find(record => record.id === invoiceId);
     if (!invoice) return null;
-
     const existing = eInvoices.find(record => record.invoiceId === invoiceId);
     const nextRecord: EInvoiceRecord = {
       id: existing?.id ?? genId(),
@@ -465,18 +467,97 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       generatedAt: todayString(),
       status: "Generated",
     };
-
     setEInvoices(prev => existing
       ? prev.map(record => record.invoiceId === invoiceId ? nextRecord : record)
       : [nextRecord, ...prev]);
-
     return nextRecord;
   }, [eInvoices, invoices]);
-
   const cancelEInvoice = useCallback((invoiceId: string) => {
-    setEInvoices(prev => prev.map(record => record.invoiceId === invoiceId
-      ? { ...record, status: "Cancelled" }
-      : record));
+    setEInvoices(prev => prev.map(record => record.invoiceId === invoiceId ? { ...record, status: "Cancelled" } : record));
+  }, []);
+
+  // Generic Document CRUD
+  const docPrefixes: Record<string, string> = {
+    "/sales/quotation": "QT",
+    "/sales/payment-in": "PI",
+    "/sales/return": "SR",
+    "/sales/credit-note": "CN",
+    "/sales/delivery-challan": "DC",
+    "/sales/proforma": "PF",
+    "/purchases/payment-out": "PO-OUT",
+    "/purchases/return": "PR",
+    "/purchases/debit-note": "DN",
+  };
+  const getNextDocNo = useCallback((type: string) => {
+    const prefix = docPrefixes[type] || "DOC";
+    const nums = documents.filter(d => d.type === type).map(d => {
+      const match = d.docNo.match(/(\d+)$/);
+      return match ? parseInt(match[1]) : 0;
+    });
+    return `${prefix}-${String(Math.max(0, ...nums) + 1).padStart(3, "0")}`;
+  }, [documents]);
+  const addDocument = useCallback((doc: Omit<GenericDocument, "id" | "createdAt">) => {
+    const newDoc: GenericDocument = { ...doc, id: genId(), createdAt: todayString() };
+    setDocuments(prev => [newDoc, ...prev]);
+    return newDoc;
+  }, []);
+  const updateDocument = useCallback((id: string, doc: Partial<GenericDocument>) => {
+    setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...doc } : d));
+  }, []);
+  const deleteDocument = useCallback((id: string) => {
+    setDocuments(prev => prev.filter(d => d.id !== id));
+  }, []);
+
+  // Staff Member CRUD
+  const addStaffMember = useCallback((s: Omit<StaffMember, "id" | "createdAt">) => {
+    const newS: StaffMember = { ...s, id: genId(), createdAt: todayString() };
+    setStaffMembers(prev => [...prev, newS]);
+    return newS;
+  }, []);
+  const updateStaffMember = useCallback((id: string, s: Partial<StaffMember>) => {
+    setStaffMembers(prev => prev.map(p => p.id === id ? { ...p, ...s } : p));
+  }, []);
+  const deleteStaffMember = useCallback((id: string) => {
+    setStaffMembers(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  // App User CRUD
+  const addAppUser = useCallback((u: Omit<AppUser, "id" | "createdAt">) => {
+    const newU: AppUser = { ...u, id: genId(), createdAt: todayString() };
+    setAppUsers(prev => [...prev, newU]);
+    return newU;
+  }, []);
+  const updateAppUser = useCallback((id: string, u: Partial<AppUser>) => {
+    setAppUsers(prev => prev.map(p => p.id === id ? { ...p, ...u } : p));
+  }, []);
+  const deleteAppUser = useCallback((id: string) => {
+    setAppUsers(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  // Online Order CRUD
+  const addOnlineOrder = useCallback((o: Omit<OnlineOrder, "id" | "createdAt">) => {
+    const newO: OnlineOrder = { ...o, id: genId(), createdAt: todayString() };
+    setOnlineOrders(prev => [newO, ...prev]);
+    return newO;
+  }, []);
+  const updateOnlineOrder = useCallback((id: string, o: Partial<OnlineOrder>) => {
+    setOnlineOrders(prev => prev.map(p => p.id === id ? { ...p, ...o } : p));
+  }, []);
+  const deleteOnlineOrder = useCallback((id: string) => {
+    setOnlineOrders(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  // Godown Item CRUD
+  const addGodownItem = useCallback((g: Omit<GodownItem, "id" | "createdAt">) => {
+    const newG: GodownItem = { ...g, id: genId(), createdAt: todayString() };
+    setGodownItems(prev => [...prev, newG]);
+    return newG;
+  }, []);
+  const updateGodownItem = useCallback((id: string, g: Partial<GodownItem>) => {
+    setGodownItems(prev => prev.map(p => p.id === id ? { ...p, ...g } : p));
+  }, []);
+  const deleteGodownItem = useCallback((id: string) => {
+    setGodownItems(prev => prev.filter(p => p.id !== id));
   }, []);
 
   const totalRevenue = invoices.reduce((s, inv) => s + inv.grandTotal, 0);
@@ -488,6 +569,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppDataContext.Provider value={{
       customers, items, invoices, expenses, purchaseOrders, recurringBills, cashEntries, eInvoices,
+      documents, staffMembers, appUsers, onlineOrders, godownItems,
       addCustomer, updateCustomer, deleteCustomer,
       addItem, updateItem, deleteItem,
       addInvoice, updateInvoice, deleteInvoice,
@@ -497,6 +579,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addRecurringBill, updateRecurringBill, deleteRecurringBill,
       addCashEntry, deleteCashEntry,
       generateEInvoice, cancelEInvoice,
+      addDocument, updateDocument, deleteDocument, getNextDocNo,
+      addStaffMember, updateStaffMember, deleteStaffMember,
+      addAppUser, updateAppUser, deleteAppUser,
+      addOnlineOrder, updateOnlineOrder, deleteOnlineOrder,
+      addGodownItem, updateGodownItem, deleteGodownItem,
       getNextInvoiceNo,
       totalRevenue, totalExpenses: totalExpensesAmount, profit, toCollect, toPay,
     }}>
