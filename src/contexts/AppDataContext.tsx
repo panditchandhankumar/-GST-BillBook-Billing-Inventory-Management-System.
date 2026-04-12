@@ -123,6 +123,62 @@ export interface EInvoiceRecord {
   status: "Generated" | "Cancelled";
 }
 
+export interface GenericDocument {
+  id: string;
+  type: string;
+  docNo: string;
+  date: string;
+  partyId: string;
+  partyName: string;
+  amount: number;
+  status: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+  phone: string;
+  salary: number;
+  joinDate: string;
+  attendance: Record<string, "Present" | "Absent" | "Half Day">;
+  createdAt: string;
+}
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "Admin" | "Manager" | "Staff" | "Viewer";
+  status: "Active" | "Inactive";
+  lastLogin: string;
+  createdAt: string;
+}
+
+export interface OnlineOrder {
+  id: string;
+  orderNo: string;
+  platform: string;
+  customerName: string;
+  date: string;
+  items: string;
+  amount: number;
+  status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+  createdAt: string;
+}
+
+export interface GodownItem {
+  id: string;
+  itemId: string;
+  itemName: string;
+  godownName: string;
+  stock: number;
+  minStock: number;
+  createdAt: string;
+}
+
 interface AppData {
   customers: Customer[];
   items: Item[];
