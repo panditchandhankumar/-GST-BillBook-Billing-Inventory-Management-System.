@@ -21,6 +21,10 @@ import PurchaseOrders from "./pages/PurchaseOrders";
 import PosBilling from "./pages/PosBilling";
 import AutomatedBills from "./pages/AutomatedBills";
 import EInvoicing from "./pages/EInvoicing";
+import StaffPayroll from "./pages/StaffPayroll";
+import ManageUsers from "./pages/ManageUsers";
+import OnlineOrders from "./pages/OnlineOrders";
+import GodownWarehouse from "./pages/GodownWarehouse";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +40,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/parties" element={<Parties />} />
               <Route path="/items" element={<Items />} />
-              <Route path="/items/godown" element={<GenericPage />} />
+              <Route path="/items/godown" element={<GodownWarehouse />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/sales/create" element={<CreateSalesInvoice />} />
               <Route path="/sales/edit/:id" element={<CreateSalesInvoice />} />
@@ -57,9 +61,9 @@ const App = () => (
               <Route path="/e-invoicing" element={<EInvoicing />} />
               <Route path="/automated-bills" element={<AutomatedBills />} />
               <Route path="/pos-billing" element={<PosBilling />} />
-              <Route path="/staff-payroll" element={<GenericPage />} />
-              <Route path="/manage-users" element={<GenericPage />} />
-              <Route path="/online-orders" element={<GenericPage />} />
+              <Route path="/staff-payroll" element={<StaffPayroll />} />
+              <Route path="/manage-users" element={<ManageUsers />} />
+              <Route path="/online-orders" element={<OnlineOrders />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
